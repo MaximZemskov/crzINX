@@ -1,6 +1,7 @@
-from utils.utils import *
 import eventlet
-from eventlet.green import os
+import sys
+from utils.utils import *
+from server.server import *
 
 
 def main():
@@ -19,9 +20,15 @@ def main():
             child_pid = os.getpid()
             print('Started the Fork with PID: {0}'.format(child_pid))
             while True:
-                new_sock, address = server.accept()
-                pool.spawn_n(handle, new_sock)
-
+                try:
+                    new_sock, address = server.accept()
+                    pool.spawn_n(handle, new_sock)
+                except (SystemExit, KeyboardInterrupt):
+                    sys.exit(1)
+    try:
+        os.waitpid(-1, 0)
+    except KeyboardInterrupt:
+        sys.exit()
 
     logger("Shutdown server.", access_log)
     access_log.close()

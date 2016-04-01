@@ -1,18 +1,32 @@
-#!/usr/bin/python3
 from utils.utils import *
 import eventlet
+from eventlet.green import os
 
 
 def main():
     print("Main function starts")
     host, port, root_dir, cpu_number = parse()
     access_log, error_log = init_logger(root_dir)
+
+    server = eventlet.listen((host, port), backlog=100)
     print "Server starts on {}:{}".format(host, port)
     logger("Server starts on {}:{}".format(host, port), access_log)
+
+    for i in range(cpu_number):
+        pid = os.fork()
+        if pid == 0:
+            pool = eventlet.GreenPool(10000)
+            child_pid = os.getpid()
+            print('Started the Fork with PID: {0}'.format(child_pid))
+            while True:
+                new_sock, address = server.accept()
+                pool.spawn_n(handle, new_sock)
+
 
     logger("Shutdown server.", access_log)
     access_log.close()
     error_log.close()
+
 
 if __name__ == '__main__':
     main()

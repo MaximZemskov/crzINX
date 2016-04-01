@@ -1,7 +1,6 @@
-#!/usr/bin/python3
-
 import argparse
 import os
+import time
 
 
 def parse():
@@ -17,8 +16,8 @@ def parse():
     cpu_number = args.cpu
     is_dir = os.path.isdir(root_dir)
     if not is_dir:
-        print('{} this derictory does not exist. Would you want to create it?'.format(root_dir))
-        answer = input('--> ')
+        print('{} this directory does not exist. Would you want to create it?'.format(root_dir))
+        answer = raw_input('--> ')
         if (answer == 'y') or (answer == 'Y') or (answer == 'yes') or (answer == 'Yes'):
             try:
                 os.makedirs(root_dir)
@@ -33,11 +32,29 @@ def parse():
 
 
 def init_logger(root_dir):
-    log_dir = root_dir + "/aelogs"
-    is_dir = os.path.isdir(os.path.normpath(log_dir))
+    log_dir = os.path.normpath(root_dir + "/aelogs")
+    is_dir = os.path.isdir(log_dir)
+    access_log_path = os.path.normpath(log_dir + "/access.log")
+    error_log_path = os.path.normpath(log_dir + "/error.log")
+    access_log = False
+    error_log = False
     if not is_dir:
         try:
             os.makedirs(log_dir)
+            access_log = open(access_log_path, 'w')
+            error_log = open(error_log_path, 'w')
         except IOError as e:
             print(e)
             exit(1)
+    else:
+        try:
+            access_log = open(access_log_path, 'a')
+            error_log = open(error_log_path, 'a')
+        except IOError as e:
+            print (e)
+            exit(1)
+    return access_log, error_log
+
+
+def logger(msg, f):
+    f.write(time.ctime() + " : " + msg + "\n")

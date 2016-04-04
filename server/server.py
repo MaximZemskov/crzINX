@@ -8,6 +8,8 @@ import os
 import socket
 import urllib
 
+SERVER = "crzINX. Zemskov Maxim"
+CONNECTION = "keep-alive"
 
 def parse_request(c):
     headers = c.split('\r\n')
@@ -25,10 +27,14 @@ def index_respond(url):
     uri = url + "/index.html"
     if os.path.isfile(uri):
         f = open(uri, "rb")
-        http_response = "Date: " + get_date()
+        http_response = "Date: " + get_date() + '\r\n'
+        http_response += "Sever: {}".format(SERVER) + '\r\n'
+        http_response += "Content-Length: {}".format(os.path.getsize(uri)) + '\r\n'
+        # http_response += "Content-Type: {}".format() + '\r\n'
+        http_response += "Connection: {}".format(CONNECTION) + '\r\n'
+        return f, http_response
     else:
         respond_404(uri)
-    pass
 
 
 def file_respond(url):
@@ -47,7 +53,14 @@ def handle(client):
     try:
         url, method = parse_request(c)
         if os.path.isdir(root_dir + url):
-            # index_respond()
+            body, headers = index_respond(root_dir + url)
+            client.sendall(headers)
+            if body:
+                l = body.read(4096)
+                while l:
+                    client.send(l)
+                    l = body.read(4096)
+                body.close()
             print "Directory exist"
         elif os.path.isfile(root_dir + url):
             # file_respond

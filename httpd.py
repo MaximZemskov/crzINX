@@ -9,6 +9,8 @@ def main():
     host, port, root_dir, cpu_number = parse()
     access_log, error_log = init_logger(root_dir)
 
+    os.chdir(root_dir)
+
     server = eventlet.listen((host, port), backlog=100)
     print "Server starts on {}:{}".format(host, port)
     logger("Server starts on {}:{}".format(host, port), access_log)

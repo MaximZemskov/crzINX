@@ -1,9 +1,12 @@
 from time import strftime, gmtime
 
-from eventlet.green import socket
+from eventlet.green import socket as green_socket
+from eventlet.green import os as green_os
+from server_utils import get_date
 
-import urllib
 import os
+import socket
+import urllib
 
 
 def parse_request(c):
@@ -19,7 +22,12 @@ def parse_request(c):
 
 
 def index_respond(url):
-
+    uri = url + "/index.html"
+    if os.path.isfile(uri):
+        f = open(uri, "rb")
+        http_response = "Date: " + get_date()
+    else:
+        respond_404(uri)
     pass
 
 
@@ -33,22 +41,22 @@ def respond_404(url):
 
 def handle(client):
     root_dir = os.getcwd()
-    while True:
-        c = client.recv(1024)
-        print c
-        try:
-            url, method = parse_request(c)
-            if os.path.isdir(root_dir + url):
-                # index_respond()
-                print "Directory exist"
-            elif os.path.isfile(root_dir + url):
-                # file_respond
-                print "File exist"
-            else:
-                # respond_404
-                print 404
-        except Exception as e:
-            print e
-        finally:
-            client.shutdown(socket.SHUT_RDWR)
-            client.close()
+    print get_date()
+    c = client.recv(1024)
+    print c
+    try:
+        url, method = parse_request(c)
+        if os.path.isdir(root_dir + url):
+            # index_respond()
+            print "Directory exist"
+        elif os.path.isfile(root_dir + url):
+            # file_respond
+            print "File exist"
+        else:
+            # respond_404
+            print 404
+    except Exception as e:
+        print e
+    finally:
+        client.shutdown(socket.SHUT_RDWR)
+        client.close()

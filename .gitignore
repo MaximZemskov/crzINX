@@ -2,3 +2,5 @@
 aelogs
 server/index.html
 assets_for_tests
+httptest.py
+httptest

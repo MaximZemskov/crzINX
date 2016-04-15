@@ -26,11 +26,12 @@ def parse_request(c):
     elif len(split_url) == 1:
         content_type = "html"
         return url, method, content_type
+    # !TODO: JS and PNG fails here
     content_type = "bad"
     return url, method, content_type
 
 
-def respond(http_version, status, content_length, content_type):
+def respond(http_version, status, content_length, content_type='application/octet-stream'):
     http_response = "{} {}".format(http_version, status) + '\r\n'
     http_response += "Date: " + get_date() + '\r\n'
     http_response += "Sever: {}".format(SERVER) + '\r\n'
@@ -41,7 +42,7 @@ def respond(http_version, status, content_length, content_type):
     return http_response
 
 
-def index_respond(url, content_type):
+def index_respond(url, content_type, method):
     uri = url + "/index.html"
     if os.path.isfile(uri):
         f = open(uri, "rb")
@@ -49,25 +50,38 @@ def index_respond(url, content_type):
         status = "200 OK"
         content_length = os.path.getsize(uri)
         http_response = respond(http_version, status, content_length, content_type)
-        return f, http_response
+        if method == "GET":
+            return f, http_response
+        elif method == "HEAD":
+            f = False
+            return f, http_response
     else:
-        respond_403(uri)
+        http_response = respond_403()
+        f = False
+        return f, http_response
 
 
-def file_respond(url, content_type):
+def file_respond(url, content_type, method):
     if os.path.isfile(url):
         f = open(url, "rb")
         http_version = "HTTP/1.1"
         status = "200 OK"
         content_length = os.path.getsize(url)
         http_response = respond(http_version, status, content_length, content_type)
-        return f, http_response
+        if method == "GET":
+            return f, http_response
+        elif method == "HEAD":
+            f = False
+            return f, http_response
     else:
         respond_404()
 
 
-def respond_403(url):
-    pass
+def respond_403():
+    http_version = "HTTP/1.1"
+    status = "403 Forbidden"
+    http_response = respond(http_version, status, 0, 'application/octet- stream')
+    return http_response
 
 
 def respond_404(url):
@@ -83,19 +97,18 @@ def handle(client):
         url, method, content_type = parse_request(c)
         content_type = check_content_type(content_type)
         if os.path.isdir(root_dir + url):
-            body, headers = index_respond((root_dir + url), content_type)
+            body, headers = index_respond((root_dir + url), content_type, method)
             client.sendall(headers)
             if body:
                 data_send(client, body)
                 body.close()
             print "Directory exist"
         elif os.path.isfile(root_dir + url):
-            body, headers = file_respond((root_dir + url), content_type)
+            body, headers = file_respond((root_dir + url), content_type, method)
             client.sendall(headers)
             if body:
                 data_send(client, body)
                 body.close()
-                # TODO: DRY
             print "File exist"
         else:
             # respond_404

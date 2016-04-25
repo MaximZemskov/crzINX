@@ -23,8 +23,37 @@ def respond_file(path, method):
     f = open(path, 'rb')
     status = '200 OK'
     content_length = os.path.getsize(path)
-    c_type = path.split('.')[-1]
+    c_type = path.split('.')[-1].lower()
     content_type = server_utils.check_content_type(c_type)
+    http_response = http_response_template(status, content_length, content_type)
+    if method == 'GET':
+        return http_response, f
+    else:
+        f.close()
+        f = False
+        return http_response, f
+
+
+def respond_error(code, reason, method, path):
+    if code == 403:
+        print "403 403 403 403"
+        path += '/server/403.html'
+        f = open(path, 'rb')
+    elif code == 404:
+        print "404 404 404 404"
+        path += '/server/404.html'
+        f = open(path, 'rb')
+    elif code == 400:
+        path += '/server/400.html'
+        f = open(path, 'rb')
+    else:
+        path = '/server/404.html'
+        f = open(path, 'rb')
+        print "0.o0.o0.o0.o0.o0.o0.o0.o"
+    status = str(code) + ' {}'.format(reason)
+    print status
+    content_type = 'text/html'
+    content_length = os.path.getsize(path)
     http_response = http_response_template(status, content_length, content_type)
     if method == 'GET':
         return http_response, f
@@ -41,9 +70,14 @@ def handle(client):
         request_headers = c.decode().split("\r\n")
         request = request_headers[0].split(' ')
         method, url, httpv = request[0], request[1], request[2]
-        if method not in ['GET', 'HEAD']:
+        url = urllib.unquote(url).decode('utf8')
+        if method not in ['GET', 'HEAD'] or '..' in url:
             # bad request
-            print 'BAD REQUEST'
+            headers, body = respond_error(400, 'Bad request', method, root_dir)
+            client.sendall(headers)
+            if body:
+                server_utils.data_send(client, body)
+                body.close()
         else:
             cur_path = root_dir + url
             if os.path.isdir(cur_path):
@@ -55,8 +89,23 @@ def handle(client):
                         server_utils.data_send(client, body)
                         body.close()
                 else:
-                    # repond 403
-                    pass
+                    headers, body = respond_error(403, 'Forbidden', method, root_dir)
+                    client.sendall(headers)
+                    if body:
+                        server_utils.data_send(client, body)
+                        body.close()
+            elif os.path.isfile(cur_path):
+                headers, body = respond_file(cur_path, method)
+                client.sendall(headers)
+                if body:
+                    server_utils.data_send(client, body)
+                    body.close()
+                else:
+                    headers, body = respond_error(404, 'Not Found', method, root_dir)
+                    client.sendall(headers)
+                    if body:
+                        server_utils.data_send(client, body)
+                        body.close()
         print(request)
     except Exception as e:
         print e

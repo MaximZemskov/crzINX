@@ -22,8 +22,6 @@ def get_date():
 def check_content_type(type):
     if type in CONTENT_TYPE:
         return CONTENT_TYPE[type]
-    else:
-        return CONTENT_TYPE['other']
 
 
 def data_send(client, body):

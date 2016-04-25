@@ -1,4 +1,5 @@
-import time
+from time import gmtime, strftime
+
 
 CONTENT_TYPE = {
     'txt': 'text/html',
@@ -15,12 +16,14 @@ CONTENT_TYPE = {
 
 
 def get_date():
-    return time.strftime("%a, %d %b %Y %X %Z")
+    return strftime("%a, %d %b %Y %X GMT", gmtime())
 
 
 def check_content_type(type):
     if type in CONTENT_TYPE:
         return CONTENT_TYPE[type]
+    else:
+        return CONTENT_TYPE['other']
 
 
 def data_send(client, body):

@@ -1,7 +1,8 @@
 import eventlet
 import sys
 from utils.utils import *
-from server.server import *
+# from server.server import *
+from server_res import *
 
 
 def main():

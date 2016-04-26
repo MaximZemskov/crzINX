@@ -36,11 +36,9 @@ def respond_file(path, method):
 
 def respond_error(code, reason, method, path):
     if code == 403:
-        print "403 403 403 403"
         path += '/server/403.html'
         f = open(path, 'rb')
     elif code == 404:
-        print "404 404 404 404"
         path += '/server/404.html'
         f = open(path, 'rb')
     elif code == 400:
@@ -51,15 +49,14 @@ def respond_error(code, reason, method, path):
         f = open(path, 'rb')
         print "0.o0.o0.o0.o0.o0.o0.o0.o"
     status = str(code) + ' {}'.format(reason)
-    print status
     content_type = 'text/html'
     content_length = os.path.getsize(path)
     http_response = http_response_template(status, content_length, content_type)
-    if method == 'GET':
-        return http_response, f
-    else:
+    if method == 'HEAD':
         f.close()
         f = False
+        return http_response, f
+    else:
         return http_response, f
 
 
@@ -74,6 +71,9 @@ def handle(client):
         if method not in ['GET', 'HEAD'] or '..' in url:
             # bad request
             headers, body = respond_error(400, 'Bad request', method, root_dir)
+            if method == 'POST':
+                print headers
+                print body
             client.sendall(headers)
             if body:
                 server_utils.data_send(client, body)

@@ -11,7 +11,7 @@ CONNECTION = "keep-alive"
 def http_response_template(status, content_length, content_type, httpv='HTTP/1.1'):
     http_response = "{} {}".format(httpv, status) + '\r\n'
     http_response += "Date: " + server_utils.get_date() + '\r\n'
-    http_response += "Sever: {}".format(SERVER) + '\r\n'
+    http_response += "Server: {}".format(SERVER) + '\r\n'
     http_response += "Content-Length: {}".format(content_length) + '\r\n'
     http_response += "Connection: {}".format(CONNECTION) + '\r\n'
     http_response += "Content-Type: {}".format(content_type) + '\r\n'
@@ -80,6 +80,8 @@ def handle(client):
                 body.close()
         else:
             cur_path = root_dir + url
+            if '?' in cur_path:
+                cur_path = cur_path.split('?')[0]
             if os.path.isdir(cur_path):
                 cur_path += '/index.html'
                 if os.path.isfile(cur_path):
@@ -100,12 +102,12 @@ def handle(client):
                 if body:
                     server_utils.data_send(client, body)
                     body.close()
-                else:
-                    headers, body = respond_error(404, 'Not Found', method, root_dir)
-                    client.sendall(headers)
-                    if body:
-                        server_utils.data_send(client, body)
-                        body.close()
+            else:
+                headers, body = respond_error(404, 'Not Found', method, root_dir)
+                client.sendall(headers)
+                if body:
+                    server_utils.data_send(client, body)
+                    body.close()
         print(request)
     except Exception as e:
         print e

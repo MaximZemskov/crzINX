@@ -60,6 +60,10 @@ def respond_error(code, reason, method, path):
         return http_response, f
 
 
+def parse_request():
+    pass
+
+
 def handle(client):
     root_dir = os.getcwd()
     try:
@@ -108,8 +112,7 @@ def handle(client):
                 if body:
                     server_utils.data_send(client, body)
                     body.close()
-        print(request)
-    except Exception as e:
+    except IndexError as e:
         print e
     finally:
         client.shutdown(socket.SHUT_RDWR)

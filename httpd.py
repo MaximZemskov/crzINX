@@ -21,7 +21,6 @@ def main():
         if pid == 0:
             pool = eventlet.GreenPool(10000)
             child_pid = os.getpid()
-            print('Started the Fork with PID: {0}'.format(child_pid))
             while True:
                 try:
                     new_sock, address = server.accept()

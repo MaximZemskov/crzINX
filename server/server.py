@@ -67,6 +67,7 @@ def parse_request(c):
         request = request_headers[0].split(' ')
         method, url, httpv = request[0], request[1], request[2]
         url = os.path.normpath(url)
+        url = urllib.unquote(url).decode('utf8')
         return method, url, httpv
     except Exception as e:
         print e
@@ -78,7 +79,6 @@ def handle(client):
     try:
         c = client.recv(10000)
         method, url, httpv = parse_request(c)
-        url = urllib.unquote(url).decode('utf8')
         if method not in ['GET', 'HEAD']:
             # bad request
             headers, body = respond_error(400, 'Bad request', method, root_dir)

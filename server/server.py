@@ -1,3 +1,4 @@
+
 import server_utils as server_utils
 
 import os
@@ -60,19 +61,25 @@ def respond_error(code, reason, method, path):
         return http_response, f
 
 
-def parse_request():
-    pass
+def parse_request(c):
+    try:
+        request_headers = c.decode().split("\r\n")
+        request = request_headers[0].split(' ')
+        method, url, httpv = request[0], request[1], request[2]
+        url = os.path.normpath(url)
+        return method, url, httpv
+    except Exception as e:
+        print e
+        return "bad", "url", "HTTP/1.1"
 
 
 def handle(client):
     root_dir = os.getcwd()
     try:
         c = client.recv(10000)
-        request_headers = c.decode().split("\r\n")
-        request = request_headers[0].split(' ')
-        method, url, httpv = request[0], request[1], request[2]
+        method, url, httpv = parse_request(c)
         url = urllib.unquote(url).decode('utf8')
-        if method not in ['GET', 'HEAD'] or '..' in url:
+        if method not in ['GET', 'HEAD']:
             # bad request
             headers, body = respond_error(400, 'Bad request', method, root_dir)
             if method == 'POST':
